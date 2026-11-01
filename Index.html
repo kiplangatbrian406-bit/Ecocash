@@ -1,0 +1,301 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoanBridge - Online Loans</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f1f5f9;
+    margin: 0;
+    color: #222;
+}
+
+header {
+    background: #073b67;
+    color: white;
+    text-align: center;
+    padding: 25px;
+}
+
+.container {
+    max-width: 500px;
+    margin: 30px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px #0002;
+}
+
+h2 {
+    color: #073b67;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 7px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background: #078354;
+    border: none;
+    color: white;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.back {
+    background: #64748b;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+.result {
+    background: #e8f5ed;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.notice {
+    background: #fff4d6;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 13px;
+    color: #666;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>LoanBridge</h1>
+    <p>Simple and Transparent Loan Applications</p>
+</header>
+
+<div class="container">
+
+    <!-- STAGE 1 -->
+    <section id="stage1" class="page active">
+        <h2>Applicant Details</h2>
+
+        <form id="detailsForm">
+            <label>Full Name</label>
+            <input type="text" id="fullname" required>
+
+            <label>Phone Number</label>
+            <input type="tel" id="phone" required>
+
+            <label>Email Address</label>
+            <input type="email" id="email" required>
+
+            <label>Country</label>
+            <select id="country" required>
+                <option value="">Choose country</option>
+                <option>Kenya</option>
+                <option>Zimbabwe</option>
+                <option>Uganda</option>
+                <option>Tanzania</option>
+                <option>South Africa</option>
+                <option>Other</option>
+            </select>
+
+            <button type="submit">Continue</button>
+        </form>
+    </section>
+
+    <!-- STAGE 2 -->
+    <section id="stage2" class="page">
+        <h2>Loan Calculator</h2>
+
+        <label>Choose Loan Amount (USD)</label>
+        <input type="range" id="loan"
+            min="50" max="5000" step="50"
+            value="500" oninput="calculate()">
+
+        <h3 id="loanValue">$500</h3>
+
+        <label>Repayment Period</label>
+        <select id="period" onchange="calculate()">
+            <option value="3">3 Months</option>
+            <option value="6">6 Months</option>
+            <option value="12" selected>12 Months</option>
+            <option value="18">18 Months</option>
+        </select>
+
+        <label>Monthly Interest Rate (%)</label>
+        <input type="number" id="rate"
+            value="2" min="0" step="0.1"
+            oninput="calculate()">
+
+        <div class="result">
+            <p>Monthly Repayment</p>
+            <h2 id="monthly">$0.00</h2>
+
+            <p>Total Repayment</p>
+            <h3 id="total">$0.00</h3>
+        </div>
+
+        <p class="notice">
+            These are estimates based on flat monthly interest.
+            Final loan terms must be agreed with the lender.
+        </p>
+
+        <button onclick="showStage('stage3')">Continue</button>
+        <button class="back" onclick="showStage('stage1')">Back</button>
+    </section>
+
+    <!-- STAGE 3 -->
+    <section id="stage3" class="page">
+        <h2>EcoCash Payment Information</h2>
+
+        <p>
+            Follow the instructions provided by an authorized
+            EcoCash merchant if a legitimate payment is required.
+        </p>
+
+        <div class="notice">
+            Never enter your EcoCash PIN on this website.
+            Only use official, authorized payment channels.
+            Do not pay an unverified personal account.
+        </div>
+
+        <label>Official Payment Reference (if applicable)</label>
+        <input type="text" id="reference"
+            placeholder="Enter payment reference">
+
+        <button onclick="finishApplication()">
+            Submit Application
+        </button>
+
+        <button class="back" onclick="showStage('stage2')">
+            Back
+        </button>
+    </section>
+
+    <!-- STAGE 4 -->
+    <section id="stage4" class="page">
+        <h2>Application Received!</h2>
+
+        <div class="result">
+            <h3 id="welcome"></h3>
+            <p>Your application has been submitted.</p>
+
+            <p>Loan Amount:
+                <strong id="confirmedLoan"></strong>
+            </p>
+
+            <p>Application Status:
+                <strong>Pending Review</strong>
+            </p>
+        </div>
+
+        <p>
+            Your application is awaiting review.
+            Submission does not guarantee loan approval
+            or disbursement.
+        </p>
+
+        <button onclick="location.reload()">
+            New Application
+        </button>
+    </section>
+
+</div>
+
+<footer>
+    LoanBridge © 2026
+    <p>Demonstration website. Not a licensed lending service.</p>
+</footer>
+
+<script>
+
+let applicant = "";
+let loanAmount = 500;
+
+function showStage(id) {
+    document.querySelectorAll(".page").forEach(function(page) {
+        page.classList.remove("active");
+    });
+
+    document.getElementById(id).classList.add("active");
+    window.scrollTo(0, 0);
+}
+
+document.getElementById("detailsForm").addEventListener(
+    "submit", function(event) {
+        event.preventDefault();
+
+        applicant = document.getElementById("fullname").value;
+        showStage("stage2");
+    }
+);
+
+function calculate() {
+    loanAmount = Number(document.getElementById("loan").value);
+
+    let months = Number(document.getElementById("period").value);
+    let rate = Number(document.getElementById("rate").value);
+
+    let totalInterest = loanAmount * (rate / 100) * months;
+    let totalPayment = loanAmount + totalInterest;
+    let monthlyPayment = totalPayment / months;
+
+    document.getElementById("loanValue").textContent =
+        "$" + loanAmount.toFixed(2);
+
+    document.getElementById("monthly").textContent =
+        "$" + monthlyPayment.toFixed(2);
+
+    document.getElementById("total").textContent =
+        "$" + totalPayment.toFixed(2);
+}
+
+function finishApplication() {
+    document.getElementById("welcome").textContent =
+        "Thank you, " + applicant + "!";
+
+    document.getElementById("confirmedLoan").textContent =
+        "$" + loanAmount.toFixed(2);
+
+    showStage("stage4");
+}
+
+calculate();
+
+</script>
+
+</body>
+          </html>
+          
